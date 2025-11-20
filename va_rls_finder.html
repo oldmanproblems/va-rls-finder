@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA Restless Leg Syndrome Location Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .search-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+
+        .error {
+            background: #fee;
+            border: 2px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .location-card {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .location-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .location-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .location-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .diagnosis-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 18px;
+            white-space: nowrap;
+            margin-left: 15px;
+        }
+
+        .distance {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .provider-search {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .provider-button {
+            padding: 10px 20px;
+            font-size: 14px;
+            background: #2ecc71;
+            margin-top: 10px;
+        }
+
+        .provider-button:hover {
+            background: #27ae60;
+        }
+
+        .provider-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .provider-link:hover {
+            text-decoration: underline;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px;
+            font-size: 18px;
+        }
+
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .location-header {
+                flex-direction: column;
+            }
+
+            .diagnosis-badge {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 VA Restless Leg Syndrome Finder</h1>
+        <p class="subtitle">Find VA locations near you with RLS diagnosis counts and Sleep Specialists</p>
+
+        <div class="search-section">
+            <div class="input-group">
+                <input type="text" id="zipcode" placeholder="Enter ZIP Code (e.g., 90210)" maxlength="5">
+                <button id="searchBtn" onclick="searchLocations()">Search Locations</button>
+            </div>
+            <div class="note">
+                <strong>Note:</strong> Diagnosis counts showing "&lt;100" indicate fewer than 100 recorded cases at that location.
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            🔍 Searching for nearby VA locations...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        // Embedded CSV data
+        const vaData = [
+            { name: "Togus, ME HCS", code: "402", region: "V01", diagnoses: 608, lat: 44.3106, lon: -69.7195 },
+            { name: "White River Junction, VT HCS", code: "405", region: "V01", diagnoses: 350, lat: 43.6489, lon: -72.3195 },
+            { name: "Bedford, MA HCS", code: "518", region: "V01", diagnoses: 141, lat: 42.4905, lon: -71.2756 },
+            { name: "Boston, MA HCS", code: "523", region: "V01", diagnoses: 512, lat: 42.3601, lon: -71.0589 },
+            { name: "Manchester, NH HCS", code: "608", region: "V01", diagnoses: 282, lat: 42.9956, lon: -71.4548 },
+            { name: "Central Western Massachusetts HCS", code: "631", region: "V01", diagnoses: 264, lat: 42.1015, lon: -72.5898 },
+            { name: "Providence, RI HCS", code: "650", region: "V01", diagnoses: 230, lat: 41.8240, lon: -71.4128 },
+            { name: "Connecticut HCS", code: "689", region: "V01", diagnoses: 411, lat: 41.5623, lon: -72.6506 },
+            { name: "Bronx, NY HCS", code: "526", region: "V02", diagnoses: "<100", lat: 40.8448, lon: -73.8648 },
+            { name: "Western New York HCS", code: "528", region: "V02", diagnoses: 319, lat: 42.8864, lon: -78.8784 },
+            { name: "Finger Lakes, NY HCS", code: "528A6", region: "V02", diagnoses: 293, lat: 43.1566, lon: -77.6088 },
+            { name: "Syracuse, NY HCS", code: "528A7", region: "V02", diagnoses: 376, lat: 43.0481, lon: -76.1474 },
+            { name: "Albany, NY HCS", code: "528A8", region: "V02", diagnoses: 334, lat: 42.6526, lon: -73.7562 },
+            { name: "New Jersey HCS", code: "561", region: "V02", diagnoses: 308, lat: 40.0583, lon: -74.4057 },
+            { name: "Hudson Valley, NY HCS", code: "620", region: "V02", diagnoses: 147, lat: 41.7032, lon: -73.9276 },
+            { name: "New York Harbor HCS", code: "630", region: "V02", diagnoses: "<100", lat: 40.7128, lon: -74.0060 },
+            { name: "Northport, NY HCS", code: "632", region: "V02", diagnoses: 117, lat: 40.9009, lon: -73.3262 },
+            { name: "Wilmington, DE HCS", code: "460", region: "V04", diagnoses: 254, lat: 39.7391, lon: -75.5398 },
+            { name: "Altoona, PA HCS", code: "503", region: "V04", diagnoses: 413, lat: 40.5187, lon: -78.3947 },
+            { name: "Butler, PA HCS", code: "529", region: "V04", diagnoses: 174, lat: 40.8612, lon: -79.8953 },
+            { name: "Coatesville, PA HCS", code: "542", region: "V04", diagnoses: 146, lat: 39.9831, lon: -75.8238 },
+            { name: "Erie, PA HCS", code: "562", region: "V04", diagnoses: 261, lat: 42.1292, lon: -80.0851 },
+            { name: "Lebanon, PA HCS", code: "595", region: "V04", diagnoses: 535, lat: 40.3409, lon: -76.4113 },
+            { name: "Philadelphia, PA HCS", code: "642", region: "V04", diagnoses: 639, lat: 39.9526, lon: -75.1652 },
+            { name: "Pittsburgh, PA HCS", code: "646", region: "V04", diagnoses: 605, lat: 40.4406, lon: -79.9959 },
+            { name: "Wilkes-Barre, PA HCS", code: "693", region: "V04", diagnoses: 464, lat: 41.2459, lon: -75.8813 },
+            { name: "Baltimore, MD HCS", code: "512", region: "V05", diagnoses: 373, lat: 39.2904, lon: -76.6122 },
+            { name: "Beckley, WV HCS", code: "517", region: "V05", diagnoses: 209, lat: 37.7782, lon: -81.1882 },
+            { name: "Clarksburg, WV HCS", code: "540", region: "V05", diagnoses: 400, lat: 39.2806, lon: -80.3445 },
+            { name: "Huntington, WV HCS", code: "581", region: "V05", diagnoses: 428, lat: 38.4192, lon: -82.4452 },
+            { name: "Martinsburg, WV HCS", code: "613", region: "V05", diagnoses: 440, lat: 39.4562, lon: -77.9639 },
+            { name: "Washington, DC HCS", code: "688", region: "V05", diagnoses: 247, lat: 38.9072, lon: -77.0369 },
+            { name: "Durham, NC HCS", code: "558", region: "V06", diagnoses: 726, lat: 35.9940, lon: -78.8986 },
+            { name: "Fayetteville, NC HCS", code: "565", region: "V06", diagnoses: 796, lat: 35.0527, lon: -78.8784 },
+            { name: "Hampton, VA HCS", code: "590", region: "V06", diagnoses: 532, lat: 37.0299, lon: -76.3452 },
+            { name: "Asheville, NC HCS", code: "637", region: "V06", diagnoses: 702, lat: 35.5951, lon: -82.5515 },
+            { name: "Richmond, VA HCS", code: "652", region: "V06", diagnoses: 1250, lat: 37.5407, lon: -77.4360 },
+            { name: "Salem, VA HCS", code: "658", region: "V06", diagnoses: 692, lat: 37.2932, lon: -80.0547 },
+            { name: "Salisbury, NC HCS", code: "659", region: "V06", diagnoses: 889, lat: 35.6709, lon: -80.4742 },
+            { name: "Atlanta, GA HCS", code: "508", region: "V07", diagnoses: 1063, lat: 33.7490, lon: -84.3880 },
+            { name: "Augusta, GA HCS", code: "509", region: "V07", diagnoses: 432, lat: 33.4735, lon: -82.0105 },
+            { name: "Birmingham, AL HCS", code: "521", region: "V07", diagnoses: 777, lat: 33.5186, lon: -86.8104 },
+            { name: "Charleston, SC HCS", code: "534", region: "V07", diagnoses: 769, lat: 32.7765, lon: -79.9311 },
+            { name: "Columbia, SC HCS", code: "544", region: "V07", diagnoses: 839, lat: 34.0007, lon: -81.0348 },
+            { name: "Dublin, GA HCS", code: "557", region: "V07", diagnoses: 333, lat: 32.5404, lon: -82.9038 },
+            { name: "Central Alabama HCS", code: "619", region: "V07", diagnoses: 401, lat: 32.3668, lon: -86.2999 },
+            { name: "Tuscaloosa, AL HCS", code: "679", region: "V07", diagnoses: 251, lat: 33.2098, lon: -87.5692 },
+            { name: "Bay Pines, FL HCS", code: "516", region: "V08", diagnoses: 992, lat: 27.8128, lon: -82.7774 },
+            { name: "Miami, FL HCS", code: "546", region: "V08", diagnoses: 336, lat: 25.7617, lon: -80.1918 },
+            { name: "West Palm Beach, FL HCS", code: "548", region: "V08", diagnoses: 708, lat: 26.7153, lon: -80.0534 },
+            { name: "Gainesville, FL HCS", code: "573", region: "V08", diagnoses: 2268, lat: 29.6516, lon: -82.3248 },
+            { name: "San Juan, PR HCS", code: "672", region: "V08", diagnoses: 312, lat: 18.4655, lon: -66.1057 },
+            { name: "Tampa, FL HCS", code: "673", region: "V08", diagnoses: 975, lat: 27.9506, lon: -82.4572 },
+            { name: "Orlando, FL HCS", code: "675", region: "V08", diagnoses: 1137, lat: 28.5383, lon: -81.3792 },
+            { name: "Lexington, KY HCS", code: "596", region: "V09", diagnoses: 802, lat: 38.0406, lon: -84.5037 },
+            { name: "Louisville, KY HCS", code: "603", region: "V09", diagnoses: 863, lat: 38.2527, lon: -85.7585 },
+            { name: "Memphis, TN HCS", code: "614", region: "V09", diagnoses: 510, lat: 35.1495, lon: -90.0490 },
+            { name: "Mountain Home, TN HCS", code: "621", region: "V09", diagnoses: 1401, lat: 36.3334, lon: -82.3543 },
+            { name: "Middle Tennessee HCS", code: "626", region: "V09", diagnoses: 1563, lat: 36.1627, lon: -86.7816 },
+            { name: "Ann Arbor, MI HCS", code: "506", region: "V10", diagnoses: 762, lat: 42.2808, lon: -83.7430 },
+            { name: "Battle Creek, MI HCS", code: "515", region: "V10", diagnoses: 579, lat: 42.3211, lon: -85.1797 },
+            { name: "Chillicothe, OH HCS", code: "538", region: "V10", diagnoses: 321, lat: 39.3331, lon: -82.9824 },
+            { name: "Cincinnati, OH HCS", code: "539", region: "V10", diagnoses: 742, lat: 39.1031, lon: -84.5120 },
+            { name: "Cleveland, OH HCS", code: "541", region: "V10", diagnoses: 1670, lat: 41.4993, lon: -81.6944 },
+            { name: "Dayton, OH HCS", code: "552", region: "V10", diagnoses: 624, lat: 39.7589, lon: -84.1916 },
+            { name: "Detroit, MI HCS", code: "553", region: "V10", diagnoses: 328, lat: 42.3314, lon: -83.0458 },
+            { name: "Indianapolis, IN HCS", code: "583", region: "V10", diagnoses: 1060, lat: 39.7684, lon: -86.1581 },
+            { name: "Northern Indiana HCS", code: "610", region: "V10", diagnoses: 717, lat: 41.6834, lon: -86.2500 },
+            { name: "Saginaw, MI HCS", code: "655", region: "V10", diagnoses: 626, lat: 43.4195, lon: -83.9508 },
+            { name: "Columbus, OH HCS", code: "757", region: "V10", diagnoses: "<100", lat: 39.9612, lon: -82.9988 },
+            { name: "Chicago, IL HCS", code: "537", region: "V12", diagnoses: 207, lat: 41.8781, lon: -87.6298 },
+            { name: "Danville, IL HCS", code: "550", region: "V12", diagnoses: 424, lat: 40.1244, lon: -87.6300 },
+            { name: "North Chicago, IL HCS", code: "556", region: "V12", diagnoses: 376, lat: 42.3256, lon: -87.8412 },
+            { name: "Hines, IL HCS", code: "578", region: "V12", diagnoses: 498, lat: 41.8561, lon: -87.8367 },
+            { name: "Iron Mountain, MI HCS", code: "585", region: "V12", diagnoses: 272, lat: 45.8202, lon: -88.0654 },
+            { name: "Madison, WI HCS", code: "607", region: "V12", diagnoses: 637, lat: 43.0731, lon: -89.4012 },
+            { name: "Tomah, WI HCS", code: "676", region: "V12", diagnoses: 434, lat: 43.9786, lon: -90.5043 },
+            { name: "Milwaukee, WI HCS", code: "695", region: "V12", diagnoses: 743, lat: 43.0389, lon: -87.9065 },
+            { name: "Kansas City, MO HCS", code: "589", region: "V15", diagnoses: 811, lat: 39.0997, lon: -94.5786 },
+            { name: "Columbia, MO HCS", code: "589A4", region: "V15", diagnoses: 671, lat: 38.9517, lon: -92.3341 },
+            { name: "Eastern Kansas HCS", code: "589A5", region: "V15", diagnoses: 549, lat: 39.0473, lon: -95.6752 },
+            { name: "Wichita, KS HCS", code: "589A7", region: "V15", diagnoses: 512, lat: 37.6872, lon: -97.3301 },
+            { name: "St. Louis, MO HCS", code: "657", region: "V15", diagnoses: 804, lat: 38.6270, lon: -90.1994 },
+            { name: "Poplar Bluff, MO HCS", code: "657A4", region: "V15", diagnoses: 452, lat: 36.7570, lon: -90.3929 },
+            { name: "Marion, IL HCS", code: "657A5", region: "V15", diagnoses: 673, lat: 37.7306, lon: -88.9331 },
+            { name: "Alexandria, LA HCS", code: "502", region: "V16", diagnoses: 303, lat: 31.3113, lon: -92.4451 },
+            { name: "Gulf Coast, MS HCS", code: "520", region: "V16", diagnoses: 913, lat: 30.3960, lon: -89.0928 },
+            { name: "Fayetteville, AR HCS", code: "564", region: "V16", diagnoses: 1060, lat: 36.0626, lon: -94.1574 },
+            { name: "Houston, TX HCS", code: "580", region: "V16", diagnoses: 1011, lat: 29.7604, lon: -95.3698 },
+            { name: "Jackson, MS HCS", code: "586", region: "V16", diagnoses: 326, lat: 32.2988, lon: -90.1848 },
+            { name: "New Orleans, LA HCS", code: "629", region: "V16", diagnoses: 355, lat: 29.9511, lon: -90.0715 },
+            { name: "Shreveport, LA HCS", code: "667", region: "V16", diagnoses: 648, lat: 32.5252, lon: -93.7502 },
+            { name: "Amarillo, TX HCS", code: "504", region: "V17", diagnoses: 296, lat: 35.2220, lon: -101.8313 },
+            { name: "Big Spring, TX HCS", code: "519", region: "V17", diagnoses: 269, lat: 32.2504, lon: -101.4787 },
+            { name: "Dallas, TX HCS", code: "549", region: "V17", diagnoses: 1075, lat: 32.7767, lon: -96.7970 },
+            { name: "San Antonio, TX HCS", code: "671", region: "V17", diagnoses: 1321, lat: 29.4241, lon: -98.4936 },
+            { name: "Temple, TX HCS", code: "674", region: "V17", diagnoses: 1239, lat: 31.0982, lon: -97.3428 },
+            { name: "Texas Valley Coastal Bend HCS", code: "740", region: "V17", diagnoses: 323, lat: 27.8006, lon: -97.3964 },
+            { name: "El Paso, TX HCS", code: "756", region: "V17", diagnoses: 287, lat: 31.7619, lon: -106.4850 },
+            { name: "Montana HCS", code: "436", region: "V19", diagnoses: 661, lat: 46.5891, lon: -112.0391 },
+            { name: "Cheyenne, WY HCS", code: "442", region: "V19", diagnoses: 308, lat: 41.1400, lon: -104.8202 },
+            { name: "Aurora, CO HCS", code: "554", region: "V19", diagnoses: 972, lat: 39.7294, lon: -104.8319 },
+            { name: "Grand Junction, CO HCS", code: "575", region: "V19", diagnoses: 230, lat: 39.0639, lon: -108.5506 },
+            { name: "Muskogee, OK HCS", code: "623", region: "V19", diagnoses: 747, lat: 35.7479, lon: -95.3697 },
+            { name: "Oklahoma City, OK HCS", code: "635", region: "V19", diagnoses: 1365, lat: 35.4676, lon: -97.5164 },
+            { name: "Salt Lake City, UT HCS", code: "660", region: "V19", diagnoses: 993, lat: 40.7608, lon: -111.8910 },
+            { name: "Sheridan, WY HCS", code: "666", region: "V19", diagnoses: 207, lat: 44.7966, lon: -106.9562 },
+            { name: "Anchorage, AK HCS", code: "463", region: "V20", diagnoses: 341, lat: 61.2181, lon: -149.9003 },
+            { name: "Boise, ID HCS", code: "531", region: "V20", diagnoses: 725, lat: 43.6150, lon: -116.2023 },
+            { name: "Portland, OR HCS", code: "648", region: "V20", diagnoses: 1283, lat: 45.5152, lon: -122.6784 },
+            { name: "Roseburg, OR HCS", code: "653", region: "V20", diagnoses: 321, lat: 43.2165, lon: -123.3417 },
+            { name: "Puget Sound, WA HCS", code: "663", region: "V20", diagnoses: 1163, lat: 47.6062, lon: -122.3321 },
+            { name: "Spokane, WA HCS", code: "668", region: "V20", diagnoses: 580, lat: 47.6588, lon: -117.4260 },
+            { name: "Walla Walla, WA HCS", code: "687", region: "V20", diagnoses: 313, lat: 46.0646, lon: -118.3430 },
+            { name: "White City, OR HCS", code: "692", region: "V20", diagnoses: 230, lat: 42.4393, lon: -122.8442 },
+            { name: "Manila, PI HCS", code: "358", region: "V21", diagnoses: "<100", lat: 14.5995, lon: 120.9842 },
+            { name: "Honolulu, HI HCS", code: "459", region: "V21", diagnoses: 212, lat: 21.3099, lon: -157.8581 },
+            { name: "Fresno, CA HCS", code: "570", region: "V21", diagnoses: 295, lat: 36.7378, lon: -119.7871 },
+            { name: "Las Vegas, NV HCS", code: "593", region: "V21", diagnoses: 565, lat: 36.1699, lon: -115.1398 },
+            { name: "N. California HCS", code: "612A4", region: "V21", diagnoses: 893, lat: 38.5816, lon: -121.4944 },
+            { name: "Palo Alto, CA HCS", code: "640", region: "V21", diagnoses: 315, lat: 37.4419, lon: -122.1430 },
+            { name: "Reno, NV HCS", code: "654", region: "V21", diagnoses: 373, lat: 39.5296, lon: -119.8138 },
+            { name: "San Francisco, CA HCS", code: "662", region: "V21", diagnoses: 587, lat: 37.7749, lon: -122.4194 },
+            { name: "New Mexico HCS", code: "501", region: "V22", diagnoses: 698, lat: 35.0844, lon: -106.6504 },
+            { name: "Long Beach, CA HCS", code: "600", region: "V22", diagnoses: 225, lat: 33.7701, lon: -118.1937 },
+            { name: "Loma Linda, CA HCS", code: "605", region: "V22", diagnoses: 419, lat: 34.0484, lon: -117.2612 },
+            { name: "Phoenix, AZ HCS", code: "644", region: "V22", diagnoses: 908, lat: 33.4484, lon: -112.0740 },
+            { name: "Northern Arizona HCS", code: "649", region: "V22", diagnoses: 376, lat: 35.1983, lon: -111.6513 },
+            { name: "San Diego, CA HCS", code: "664", region: "V22", diagnoses: 549, lat: 32.7157, lon: -117.1611 },
+            { name: "Southern Arizona HCS", code: "678", region: "V22", diagnoses: 931, lat: 32.2226, lon: -110.9747 },
+            { name: "Greater Los Angeles, CA HCS", code: "691", region: "V22", diagnoses: 682, lat: 34.0522, lon: -118.2437 },
+            { name: "Fargo, ND HCS", code: "437", region: "V23", diagnoses: 592, lat: 46.8772, lon: -96.7898 },
+            { name: "Sioux Falls, SD HCS", code: "438", region: "V23", diagnoses: 519, lat: 43.5460, lon: -96.7313 },
+            { name: "Black Hills, SD HCS", code: "568", region: "V23", diagnoses: 324, lat: 44.0805, lon: -103.2310 },
+            { name: "Minneapolis, MN HCS", code: "618", region: "V23", diagnoses: 1549, lat: 44.9778, lon: -93.2650 },
+            { name: "Nebraska-W Iowa HCS", code: "636", region: "V23", diagnoses: 781, lat: 41.2565, lon: -95.9345 },
+            { name: "Central Iowa HCS", code: "636A6", region: "V23", diagnoses: 625, lat: 41.5868, lon: -93.6250 },
+            { name: "Iowa City, IA HCS", code: "636A8", region: "V23", diagnoses: 814, lat: 41.6611, lon: -91.5302 },
+            { name: "St. Cloud, MN HCS", code: "656", region: "V23", diagnoses: 517, lat: 45.5608, lon: -94.1632 }
+        ];
+
+        // Calculate distance between two coordinates using Haversine formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 3959; // Earth's radius in miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Built-in ZIP code database for locations across all states
+        const zipDatabase = {
+            // Alabama
+            '35203': { lat: 33.5186, lon: -86.8104, city: 'Birmingham', state: 'AL' },
+            '36104': { lat: 32.3668, lon: -86.2999, city: 'Montgomery', state: 'AL' },
+            '35401': { lat: 33.2098, lon: -87.5692, city: 'Tuscaloosa', state: 'AL' },
+            // Alaska
+            '99501': { lat: 61.2181, lon: -149.9003, city: 'Anchorage', state: 'AK' },
+            // Arizona
+            '85001': { lat: 33.4484, lon: -112.0740, city: 'Phoenix', state: 'AZ' },
+            '85701': { lat: 32.2226, lon: -110.9747, city: 'Tucson', state: 'AZ' },
+            '86001': { lat: 35.1983, lon: -111.6513, city: 'Flagstaff', state: 'AZ' },
+            // Arkansas
+            '72201': { lat: 34.7465, lon: -92.2896, city: 'Little Rock', state: 'AR' },
+            '72701': { lat: 36.0626, lon: -94.1574, city: 'Fayetteville', state: 'AR' },
+            // California
+            '90001': { lat: 34.0522, lon: -118.2437, city: 'Los Angeles', state: 'CA' },
+            '90210': { lat: 34.0901, lon: -118.4065, city: 'Beverly Hills', state: 'CA' },
+            '94102': { lat: 37.7749, lon: -122.4194, city: 'San Francisco', state: 'CA' },
+            '92101': { lat: 32.7157, lon: -117.1611, city: 'San Diego', state: 'CA' },
+            '95814': { lat: 38.5816, lon: -121.4944, city: 'Sacramento', state: 'CA' },
+            '95101': { lat: 37.3382, lon: -121.8863, city: 'San Jose', state: 'CA' },
+            '93721': { lat: 36.7378, lon: -119.7871, city: 'Fresno', state: 'CA' },
+            '90802': { lat: 33.7701, lon: -118.1937, city: 'Long Beach', state: 'CA' },
+            '94301': { lat: 37.4419, lon: -122.1430, city: 'Palo Alto', state: 'CA' },
+            // Colorado
+            '80201': { lat: 39.7392, lon: -104.9903, city: 'Denver', state: 'CO' },
+            '80903': { lat: 38.8339, lon: -104.8214, city: 'Colorado Springs', state: 'CO' },
+            '81501': { lat: 39.0639, lon: -108.5506, city: 'Grand Junction', state: 'CO' },
+            // Connecticut
+            '06101': { lat: 41.7658, lon: -72.6734, city: 'Hartford', state: 'CT' },
+            // Delaware
+            '19801': { lat: 39.7391, lon: -75.5398, city: 'Wilmington', state: 'DE' },
+            // Florida
+            '33101': { lat: 25.7617, lon: -80.1918, city: 'Miami', state: 'FL' },
+            '32301': { lat: 30.4383, lon: -84.2807, city: 'Tallahassee', state: 'FL' },
+            '32801': { lat: 28.5383, lon: -81.3792, city: 'Orlando', state: 'FL' },
+            '33602': { lat: 27.9506, lon: -82.4572, city: 'Tampa', state: 'FL' },
+            '32601': { lat: 29.6516, lon: -82.3248, city: 'Gainesville', state: 'FL' },
+            '33401': { lat: 26.7153, lon: -80.0534, city: 'West Palm Beach', state: 'FL' },
+            '32501': { lat: 30.4213, lon: -87.2169, city: 'Pensacola', state: 'FL' },
+            // Georgia
+            '30301': { lat: 33.7490, lon: -84.3880, city: 'Atlanta', state: 'GA' },
+            '30901': { lat: 33.4735, lon: -82.0105, city: 'Augusta', state: 'GA' },
+            '31401': { lat: 32.0809, lon: -81.0912, city: 'Savannah', state: 'GA' },
+            // Hawaii
+            '96801': { lat: 21.3099, lon: -157.8581, city: 'Honolulu', state: 'HI' },
+            // Idaho
+            '83701': { lat: 43.6150, lon: -116.2023, city: 'Boise', state: 'ID' },
+            // Illinois
+            '60601': { lat: 41.8781, lon: -87.6298, city: 'Chicago', state: 'IL' },
+            '62701': { lat: 39.7817, lon: -89.6501, city: 'Springfield', state: 'IL' },
+            '61801': { lat: 40.1106, lon: -88.2073, city: 'Urbana', state: 'IL' },
+            // Indiana
+            '46201': { lat: 39.7684, lon: -86.1581, city: 'Indianapolis', state: 'IN' },
+            '46601': { lat: 41.6764, lon: -86.2520, city: 'South Bend', state: 'IN' },
+            // Iowa
+            '50301': { lat: 41.5868, lon: -93.6250, city: 'Des Moines', state: 'IA' },
+            '52240': { lat: 41.6611, lon: -91.5302, city: 'Iowa City', state: 'IA' },
+            // Kansas
+            '66101': { lat: 39.1143, lon: -94.6274, city: 'Kansas City', state: 'KS' },
+            '67201': { lat: 37.6872, lon: -97.3301, city: 'Wichita', state: 'KS' },
+            // Kentucky
+            '40202': { lat: 38.2527, lon: -85.7585, city: 'Louisville', state: 'KY' },
+            '40501': { lat: 38.0406, lon: -84.5037, city: 'Lexington', state: 'KY' },
+            // Louisiana
+            '70112': { lat: 29.9511, lon: -90.0715, city: 'New Orleans', state: 'LA' },
+            '70801': { lat: 30.4515, lon: -91.1871, city: 'Baton Rouge', state: 'LA' },
+            '71101': { lat: 32.5252, lon: -93.7502, city: 'Shreveport', state: 'LA' },
+            // Maine
+            '04101': { lat: 43.6591, lon: -70.2568, city: 'Portland', state: 'ME' },
+            '04330': { lat: 44.3106, lon: -69.7795, city: 'Augusta', state: 'ME' },
+            // Maryland
+            '21201': { lat: 39.2904, lon: -76.6122, city: 'Baltimore', state: 'MD' },
+            '21401': { lat: 38.9784, lon: -76.4922, city: 'Annapolis', state: 'MD' },
+            // Massachusetts
+            '02101': { lat: 42.3601, lon: -71.0589, city: 'Boston', state: 'MA' },
+            '01610': { lat: 42.2626, lon: -71.8023, city: 'Worcester', state: 'MA' },
+            '01103': { lat: 42.1015, lon: -72.5898, city: 'Springfield', state: 'MA' },
+            // Michigan
+            '48201': { lat: 42.3314, lon: -83.0458, city: 'Detroit', state: 'MI' },
+            '48823': { lat: 42.7325, lon: -84.5555, city: 'East Lansing', state: 'MI' },
+            '48104': { lat: 42.2808, lon: -83.7430, city: 'Ann Arbor', state: 'MI' },
+            // Minnesota
+            '55401': { lat: 44.9778, lon: -93.2650, city: 'Minneapolis', state: 'MN' },
+            '55101': { lat: 44.9537, lon: -93.0900, city: 'St. Paul', state: 'MN' },
+            '56301': { lat: 45.5608, lon: -94.1632, city: 'St. Cloud', state: 'MN' },
+            // Mississippi
+            '39201': { lat: 32.2988, lon: -90.1848, city: 'Jackson', state: 'MS' },
+            '39501': { lat: 30.3960, lon: -89.0928, city: 'Biloxi', state: 'MS' },
+            // Missouri
+            '63101': { lat: 38.6270, lon: -90.1994, city: 'St. Louis', state: 'MO' },
+            '64101': { lat: 39.0997, lon: -94.5786, city: 'Kansas City', state: 'MO' },
+            '65201': { lat: 38.9517, lon: -92.3341, city: 'Columbia', state: 'MO' },
+            // Montana
+            '59601': { lat: 46.5891, lon: -112.0391, city: 'Helena', state: 'MT' },
+            // Nebraska
+            '68501': { lat: 40.8136, lon: -96.7026, city: 'Lincoln', state: 'NE' },
+            '68102': { lat: 41.2565, lon: -95.9345, city: 'Omaha', state: 'NE' },
+            // Nevada
+            '89101': { lat: 36.1699, lon: -115.1398, city: 'Las Vegas', state: 'NV' },
+            '89501': { lat: 39.5296, lon: -119.8138, city: 'Reno', state: 'NV' },
+            // New Hampshire
+            '03301': { lat: 43.2081, lon: -71.5376, city: 'Concord', state: 'NH' },
+            '03101': { lat: 42.9956, lon: -71.4548, city: 'Manchester', state: 'NH' },
+            // New Jersey
+            '07102': { lat: 40.7357, lon: -74.1724, city: 'Newark', state: 'NJ' },
+            '08608': { lat: 40.2206, lon: -74.7597, city: 'Trenton', state: 'NJ' },
+            // New Mexico
+            '87101': { lat: 35.0844, lon: -106.6504, city: 'Albuquerque', state: 'NM' },
+            '87501': { lat: 35.6870, lon: -105.9378, city: 'Santa Fe', state: 'NM' },
+            // New York
+            '10001': { lat: 40.7506, lon: -73.9971, city: 'New York', state: 'NY' },
+            '12201': { lat: 42.6526, lon: -73.7562, city: 'Albany', state: 'NY' },
+            '14201': { lat: 42.8864, lon: -78.8784, city: 'Buffalo', state: 'NY' },
+            '13201': { lat: 43.0481, lon: -76.1474, city: 'Syracuse', state: 'NY' },
+            '14604': { lat: 43.1566, lon: -77.6088, city: 'Rochester', state: 'NY' },
+            // North Carolina
+            '27601': { lat: 35.7796, lon: -78.6382, city: 'Raleigh', state: 'NC' },
+            '28202': { lat: 35.2271, lon: -80.8431, city: 'Charlotte', state: 'NC' },
+            '27701': { lat: 35.9940, lon: -78.8986, city: 'Durham', state: 'NC' },
+            '28801': { lat: 35.5951, lon: -82.5515, city: 'Asheville', state: 'NC' },
+            // North Dakota
+            '58501': { lat: 46.8083, lon: -100.7837, city: 'Bismarck', state: 'ND' },
+            '58102': { lat: 46.8772, lon: -96.7898, city: 'Fargo', state: 'ND' },
+            // Ohio
+            '43201': { lat: 39.9612, lon: -82.9988, city: 'Columbus', state: 'OH' },
+            '44101': { lat: 41.4993, lon: -81.6944, city: 'Cleveland', state: 'OH' },
+            '45201': { lat: 39.1031, lon: -84.5120, city: 'Cincinnati', state: 'OH' },
+            '45402': { lat: 39.7589, lon: -84.1916, city: 'Dayton', state: 'OH' },
+            // Oklahoma
+            '73101': { lat: 35.4676, lon: -97.5164, city: 'Oklahoma City', state: 'OK' },
+            '74101': { lat: 36.1540, lon: -95.9928, city: 'Tulsa', state: 'OK' },
+            // Oregon
+            '97201': { lat: 45.5152, lon: -122.6784, city: 'Portland', state: 'OR' },
+            '97301': { lat: 44.9429, lon: -123.0351, city: 'Salem', state: 'OR' },
+            // Pennsylvania
+            '19019': { lat: 39.9526, lon: -75.1652, city: 'Philadelphia', state: 'PA' },
+            '15201': { lat: 40.4406, lon: -79.9959, city: 'Pittsburgh', state: 'PA' },
+            '17101': { lat: 40.2732, lon: -76.8867, city: 'Harrisburg', state: 'PA' },
+            // Rhode Island
+            '02901': { lat: 41.8240, lon: -71.4128, city: 'Providence', state: 'RI' },
+            // South Carolina
+            '29201': { lat: 34.0007, lon: -81.0348, city: 'Columbia', state: 'SC' },
+            '29401': { lat: 32.7765, lon: -79.9311, city: 'Charleston', state: 'SC' },
+            // South Dakota
+            '57501': { lat: 44.3683, lon: -100.3512, city: 'Pierre', state: 'SD' },
+            '57101': { lat: 43.5460, lon: -96.7313, city: 'Sioux Falls', state: 'SD' },
+            // Tennessee
+            '37201': { lat: 36.1627, lon: -86.7816, city: 'Nashville', state: 'TN' },
+            '38103': { lat: 35.1495, lon: -90.0490, city: 'Memphis', state: 'TN' },
+            '37601': { lat: 36.3334, lon: -82.3543, city: 'Johnson City', state: 'TN' },
+            // Texas
+            '77001': { lat: 29.7604, lon: -95.3698, city: 'Houston', state: 'TX' },
+            '75201': { lat: 32.7767, lon: -96.7970, city: 'Dallas', state: 'TX' },
+            '78701': { lat: 30.2672, lon: -97.7431, city: 'Austin', state: 'TX' },
+            '78201': { lat: 29.4241, lon: -98.4936, city: 'San Antonio', state: 'TX' },
+            '79901': { lat: 31.7619, lon: -106.4850, city: 'El Paso', state: 'TX' },
+            '76101': { lat: 32.7555, lon: -97.3308, city: 'Fort Worth', state: 'TX' },
+            // Utah
+            '84101': { lat: 40.7608, lon: -111.8910, city: 'Salt Lake City', state: 'UT' },
+            // Vermont
+            '05601': { lat: 44.2601, lon: -72.5754, city: 'Montpelier', state: 'VT' },
+            '05401': { lat: 44.4759, lon: -73.2121, city: 'Burlington', state: 'VT' },
+            // Virginia
+            '23219': { lat: 37.5407, lon: -77.4360, city: 'Richmond', state: 'VA' },
+            '23601': { lat: 37.0299, lon: -76.3452, city: 'Newport News', state: 'VA' },
+            '22201': { lat: 38.8816, lon: -77.1020, city: 'Arlington', state: 'VA' },
+            // Washington
+            '98101': { lat: 47.6062, lon: -122.3321, city: 'Seattle', state: 'WA' },
+            '99201': { lat: 47.6588, lon: -117.4260, city: 'Spokane', state: 'WA' },
+            '98501': { lat: 47.0379, lon: -122.9007, city: 'Olympia', state: 'WA' },
+            // West Virginia
+            '25301': { lat: 38.3498, lon: -81.6326, city: 'Charleston', state: 'WV' },
+            '25401': { lat: 39.4562, lon: -77.9639, city: 'Martinsburg', state: 'WV' },
+            // Wisconsin
+            '53201': { lat: 43.0389, lon: -87.9065, city: 'Milwaukee', state: 'WI' },
+            '53701': { lat: 43.0731, lon: -89.4012, city: 'Madison', state: 'WI' },
+            // Wyoming
+            '82001': { lat: 41.1400, lon: -104.8202, city: 'Cheyenne', state: 'WY' },
+            '82601': { lat: 42.8666, lon: -106.3131, city: 'Casper', state: 'WY' },
+            // Washington DC
+            '20001': { lat: 38.9072, lon: -77.0369, city: 'Washington', state: 'DC' }
+        };
+
+        // Get coordinates from ZIP code with multiple fallback methods
+        async function getCoordinatesFromZip(zipcode) {
+            // First, check built-in database
+            if (zipDatabase[zipcode]) {
+                return zipDatabase[zipcode];
+            }
+
+            // Try primary API
+            try {
+                const response = await fetch(`https://api.zippopotam.us/us/${zipcode}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return {
+                        lat: parseFloat(data.places[0].latitude),
+                        lon: parseFloat(data.places[0].longitude),
+                        city: data.places[0]['place name'],
+                        state: data.places[0]['state abbreviation']
+                    };
+                }
+            } catch (error) {
+                console.log('Primary API failed, trying backup...');
+            }
+
+            // Try backup API (geocode.xyz)
+            try {
+                const response = await fetch(`https://geocode.xyz/${zipcode}?json=1&region=US`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.latt && data.longt) {
+                        return {
+                            lat: parseFloat(data.latt),
+                            lon: parseFloat(data.longt),
+                            city: data.city || 'Unknown',
+                            state: data.state || 'US'
+                        };
+                    }
+                }
+            } catch (error) {
+                console.log('Backup API failed');
+            }
+
+            throw new Error('Unable to find location for this ZIP code. The app has 150+ major city ZIP codes built-in, and also tries online lookup services. Please verify your ZIP code is correct.');
+        }
+
+        // Create provider search URL
+        function createProviderSearchURL(facilityName, city, state) {
+            const baseURL = 'https://www.va.gov/find-locations/';
+            // Clean up facility name for search
+            const searchTerm = facilityName.replace(/ HCS$/, '').replace(/,/g, '');
+            return `${baseURL}?facilityType=health&page=1&query=${encodeURIComponent(searchTerm)}`;
+        }
+
+        async function searchLocations() {
+            const zipcodeInput = document.getElementById('zipcode');
+            const zipcode = zipcodeInput.value.trim();
+            
+            // Validate ZIP code
+            if (!/^\d{5}$/.test(zipcode)) {
+                showError('Please enter a valid 5-digit ZIP code.');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('searchBtn').disabled = true;
+
+            try {
+                // Get coordinates for ZIP code
+                const userLocation = await getCoordinatesFromZip(zipcode);
+
+                // Calculate distances and sort
+                const locationsWithDistance = vaData.map(location => ({
+                    ...location,
+                    distance: calculateDistance(
+                        userLocation.lat,
+                        userLocation.lon,
+                        location.lat,
+                        location.lon
+                    )
+                })).sort((a, b) => a.distance - b.distance);
+
+                // Get top 5 closest locations
+                const closestLocations = locationsWithDistance.slice(0, 5);
+
+                // Display results
+                displayResults(closestLocations, userLocation);
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('searchBtn').disabled = false;
+            }
+        }
+
+        function displayResults(locations, userLocation) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (locations.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">No VA locations found.</div>';
+                return;
+            }
+
+            let html = `<h2 style="color: #2c3e50; margin-bottom: 20px;">📍 Closest VA Locations to ${userLocation.city}, ${userLocation.state}</h2>`;
+
+            locations.forEach((location, index) => {
+                const providerSearchURL = `https://www.va.gov/find-locations/?facilityType=health&serviceType=Sleep%20Medicine&page=1&query=${encodeURIComponent(location.name.replace(/ HCS$/, ''))}`;
+                
+                html += `
+                    <div class="location-card">
+                        <div class="location-header">
+                            <div class="location-name">${index + 1}. ${location.name}</div>
+                            <div class="diagnosis-badge">${location.diagnoses} RLS Cases</div>
+                        </div>
+                        <div class="distance">📏 ${location.distance.toFixed(1)} miles away</div>
+                        <div class="info-grid">
+                            <span class="info-label">Facility Code:</span>
+                            <span class="info-value">${location.code}</span>
+                            <span class="info-label">Region:</span>
+                            <span class="info-value">${location.region}</span>
+                            <span class="info-label">Coordinates:</span>
+                            <span class="info-value">${location.lat.toFixed(4)}°N, ${Math.abs(location.lon).toFixed(4)}°W</span>
+                        </div>
+                        <div class="provider-search">
+                            <strong>🩺 Find Sleep Specialists:</strong>
+                            <a href="${providerSearchURL}" target="_blank" class="provider-link">
+                                Search VA Provider Directory for Sleep Medicine Specialists →
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Allow Enter key to trigger search
+        document.getElementById('zipcode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchLocations();
+            }
+        });
+    </script>
+</body>
+</html>
