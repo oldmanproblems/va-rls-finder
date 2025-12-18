@@ -607,7 +607,7 @@
             let html = `<h2 style="color: #2c3e50; margin-bottom: 20px;">📍 Closest VA Locations to ${userLocation.city}, ${userLocation.state}</h2>`;
 
             locations.forEach((location, index) => {
-                const providerSearchURL = `https://www.va.gov/find-locations/?facilityType=health&serviceType=Sleep%20Medicine&page=1&query=${encodeURIComponent(location.name.replace(/ HCS$/, ''))}`;
+                const providerSearchURL = 'https://www.va.gov/find-locations/';
                 
                 html += `
                     <div class="location-card">
