@@ -544,57 +544,72 @@
             return `${baseURL}?facilityType=health&page=1&query=${encodeURIComponent(searchTerm)}`;
         }
 
-        async function searchLocations() {
-            const cityInput = document.getElementById('city');
-            const stateSelect = document.getElementById('state');
-            const city = cityInput.value.trim();
-            const state = stateSelect.value;
-            
-            // Validate inputs
-            if (!city) {
-                showError('Please enter a city name.');
-                return;
-            }
-            
-            if (!state) {
-                showError('Please select a state.');
-                return;
-            }
+async function searchLocations() {
+    const cityInput = document.getElementById('city');
+    const stateSelect = document.getElementById('state');
+    const searchBtn = document.getElementById('searchBtn');
+    const resultsDiv = document.getElementById('results');
+    const loadingDiv = document.getElementById('loading');
+    const errorDiv = document.getElementById('error');
+    
+    const city = cityInput.value.trim();
+    const state = stateSelect.value;
+    
+    // Validate inputs
+    if (!city) {
+        showError('Please enter a city name.');
+        return;
+    }
+    
+    if (!state) {
+        showError('Please select a state.');
+        return;
+    }
 
-            // Show loading
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('error').style.display = 'none';
-            document.getElementById('results').innerHTML = '';
-            document.getElementById('searchBtn').disabled = true;
+    // Prevent double-clicks
+    if (searchBtn.disabled) {
+        return;
+    }
 
-            try {
-                // Get coordinates for city and state
-                const userLocation = await getCoordinatesFromCityState(city, state);
+    // Clear everything immediately and show loading
+    resultsDiv.innerHTML = '';
+    resultsDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+    loadingDiv.style.display = 'block';
+    searchBtn.disabled = true;
 
-                // Calculate distances and sort
-                const locationsWithDistance = vaData.map(location => ({
-                    ...location,
-                    distance: calculateDistance(
-                        userLocation.lat,
-                        userLocation.lon,
-                        location.lat,
-                        location.lon
-                    )
-                })).sort((a, b) => a.distance - b.distance);
+    try {
+        // Get coordinates for city and state
+        const userLocation = await getCoordinatesFromCityState(city, state);
 
-                // Get top 5 closest locations
-                const closestLocations = locationsWithDistance.slice(0, 5);
+        // Calculate distances and sort
+        const locationsWithDistance = vaData.map(location => ({
+            ...location,
+            distance: calculateDistance(
+                userLocation.lat,
+                userLocation.lon,
+                location.lat,
+                location.lon
+            )
+        })).sort((a, b) => a.distance - b.distance);
 
-                // Display results
-                displayResults(closestLocations, userLocation);
+        // Get top 5 closest locations
+        const closestLocations = locationsWithDistance.slice(0, 5);
 
-            } catch (error) {
-                showError(error.message);
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('searchBtn').disabled = false;
-            }
-        }
+        // Clear again right before displaying new results
+        resultsDiv.innerHTML = '';
+        
+        // Display results
+        displayResults(closestLocations, userLocation);
+        resultsDiv.style.display = 'block';
+
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        loadingDiv.style.display = 'none';
+        searchBtn.disabled = false;
+    }
+}
 
         function displayResults(locations, userLocation) {
             const resultsDiv = document.getElementById('results');
